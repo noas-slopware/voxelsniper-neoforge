@@ -1,0 +1,17 @@
+test:
+  testText: 'Hello World!'
+  testInt: 15
+  bool:
+    testFalse: false
+    testTrue: true
+  testList:
+    - test
+    - test5
+    - test42
+    - 5
+  testObjectList:
+  - name: Hello World!
+    description: testDesc
+  - name: Hello World!
+    description: testDesc2
+  - name: third

@@ -1,0 +1,77 @@
+package com.github.kevindagame.brush;
+
+import com.github.kevindagame.snipe.SnipeData;
+import com.github.kevindagame.util.Messages;
+import com.github.kevindagame.util.Shapes;
+import com.github.kevindagame.util.Utils;
+import com.github.kevindagame.util.VoxelMessage;
+import com.github.kevindagame.util.brushOperation.BlockOperation;
+import com.github.kevindagame.voxelsniper.block.BlockFace;
+import com.github.kevindagame.voxelsniper.block.IBlock;
+import com.github.kevindagame.voxelsniper.material.VoxelMaterial;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * <a href="https://github.com/KevinDaGame/VoxelSniper-Reimagined/wiki/Brushes#clean-snow-brush">...</a>
+ *
+ * @author psanker
+ */
+public class CleanSnowBrush extends AbstractBrush {
+
+    private boolean smoothSphere = false;
+
+
+    private void cleanSnow(final SnipeData v) {
+        var positions = Shapes.ball(this.getTargetBlock().getLocation(), v.getBrushSize(), smoothSphere);
+        for (var position : positions) {
+            IBlock b = position.getBlock();
+            IBlock blockDown = b.getRelative(BlockFace.DOWN);
+            var snowMaterial = VoxelMaterial.getMaterial("snow");
+            if ((b.getMaterial().equals(snowMaterial)) && ((blockDown.getMaterial().equals(snowMaterial)) || (blockDown.getMaterial().isAir()))) {
+                addOperation(new BlockOperation(position, b.getBlockData(), VoxelMaterial.AIR().createBlockData()));
+            }
+        }
+    }
+
+    @Override
+    protected final void arrow(final SnipeData v) {
+        this.cleanSnow(v);
+    }
+
+    @Override
+    protected final void powder(final SnipeData v) {
+        this.cleanSnow(v);
+    }
+
+    @Override
+    public final void info(final VoxelMessage vm) {
+        vm.brushName(this.getName());
+        vm.size();
+    }
+
+    @Override
+    public final void parseParameters(@NotNull final String triggerHandle, final String[] params, @NotNull final SnipeData v) {
+        if (params[0].equalsIgnoreCase("info")) {
+            v.sendMessage(Messages.CLEAN_SNOW_BURSH_USAGE.replace("%triggerHandle%", triggerHandle));
+            return;
+        }
+
+        if (params[0].equalsIgnoreCase("smooth")) {
+            this.smoothSphere = !this.smoothSphere;
+            v.sendMessage(Messages.SMOOTHSPHERE_ALGORITHM.replace("%smoothSphere%", String.valueOf(this.smoothSphere)));
+            return;
+        }
+
+        v.sendMessage(Messages.BRUSH_INVALID_PARAM.replace("%triggerHandle%", triggerHandle));
+    }
+
+    @NotNull
+    @Override
+    public List<String> registerArguments() {
+
+        return new ArrayList<>(Utils.newArrayList("smooth"));
+    }
+}
