@@ -1,0 +1,135 @@
+plugins {
+    id 'java-library'
+    id 'io.github.goooler.shadow'
+    id 'org.jetbrains.kotlin.jvm'
+    id 'net.neoforged.moddev' version '2.0.148'
+}
+
+def prop = { String name -> findProperty("voxelsniper.neoforge." + name).toString() }
+def mcVersion = prop('minecraft_version')
+
+description = 'VoxelSniperNeoForge'
+group = 'com.github.kevindagame'
+version = findProperty('voxelsniper.version') ?: 'unspecified'
+
+base {
+    archivesName = 'voxelsniper'
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    // Everything bundled (and relocated) into the shipped jar: VoxelSniperCore and its libraries.
+    bundled
+    implementation.extendsFrom bundled
+}
+
+dependencies {
+    bundled project(':VoxelSniperCore')
+    // The Core libraries that Minecraft does not ship. Gson and Guava come from Minecraft itself.
+    bundled 'net.kyori:adventure-api:4.13.1'
+    bundled 'net.kyori:adventure-text-minimessage:4.13.1'
+    bundled 'net.kyori:adventure-text-serializer-legacy:4.13.1'
+    bundled 'net.kyori:adventure-text-serializer-gson:4.13.1'
+    bundled 'org.yaml:snakeyaml:1.33'
+    bundled 'net.sandrohc:schematic4j:1.1.0'
+    bundled 'org.jetbrains.kotlin:kotlin-stdlib:2.0.0'
+    compileOnly 'org.jetbrains:annotations:24.1.0'
+}
+
+neoForge {
+    version = prop('neo_version')
+
+    parchment {
+        minecraftVersion = prop('parchment_minecraft_version')
+        mappingsVersion = prop('parchment_mappings_version')
+    }
+
+    runs {
+        server {
+            server()
+            programArgument '--nogui'
+        }
+        configureEach {
+            logLevel = org.slf4j.event.Level.INFO
+        }
+    }
+
+    mods {
+        voxelsniper {
+            sourceSet sourceSets.main
+            sourceSet project(':VoxelSniperCore').sourceSets.main
+        }
+    }
+}
+
+// The Core libraries are not mods; put them on the dev run classpath as plain libraries.
+configurations.additionalRuntimeClasspath.extendsFrom configurations.bundled
+
+tasks.withType(ProcessResources).configureEach {
+    def replaceProperties = [
+            minecraft_version_range: prop('minecraft_version_range'),
+            neo_version_range      : prop('neo_version_range'),
+            mod_version            : project.version.toString(),
+    ]
+    inputs.properties replaceProperties
+    filesMatching(['META-INF/neoforge.mods.toml']) {
+        expand replaceProperties
+    }
+}
+
+kotlin {
+    jvmToolchain(21)
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 21
+}
+
+def libs = 'com.github.kevindagame.voxelsniper.libs'
+
+tasks.named('shadowJar') {
+    configurations = [project.configurations.bundled]
+    dependencies {
+        // Minecraft ships slf4j 2, Gson and Guava. schematic4j pulls in slf4j 1.7, which would split the package.
+        exclude(dependency('org.slf4j:.*'))
+        exclude(dependency('com.google.code.gson:.*'))
+        exclude(dependency('com.google.guava:.*'))
+        exclude(dependency('org.checkerframework:.*'))
+    }
+    archiveClassifier = ''
+    archiveFileName = "voxelsniper-${project.version}-neoforge-${mcVersion}.jar"
+    destinationDirectory = rootProject.file('output')
+    relocate 'net.kyori', "${libs}.net.kyori"
+    relocate 'org.yaml.snakeyaml', "${libs}.org.yaml.snakeyaml"
+    relocate 'net.sandrohc.schematic4j', "${libs}.net.sandrohc.schematic4j"
+    relocate 'kotlin', "${libs}.kotlin"
+    relocate 'org.intellij.lang.annotations', "${libs}.org.intellij.lang.annotations"
+    relocate 'org.jetbrains.annotations', "${libs}.org.jetbrains.annotations"
+    exclude 'module-info.class'
+    exclude 'META-INF/versions/*/module-info.class'
+    exclude 'META-INF/maven/**'
+    exclude 'META-INF/*.kotlin_module'
+    exclude 'META-INF/proguard/**'
+    mergeServiceFiles()
+    manifest {
+        attributes(
+                'Specification-Title': 'voxelsniper',
+                'Implementation-Title': 'VoxelSniper',
+                'Implementation-Version': project.version
+        )
+    }
+}
+
+tasks.named('jar') {
+    archiveClassifier = 'slim'
+}
+
+tasks.named('assemble') {
+    dependsOn 'shadowJar'
+}

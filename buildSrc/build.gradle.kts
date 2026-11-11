@@ -13,7 +13,6 @@ repositories {
 dependencies {
     implementation("io.github.goooler.shadow:shadow-gradle-plugin:8.1.8")
     implementation("org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.plugin:2.0.0")
-    implementation("org.spongepowered:mixingradle:0.7.+")
 
     /* DO NOT TOUCH THIS. TOUCHING THIS WILL DESTROY YOUR LIFE AND LEAVE YOU CRIPPLED AND BROKEN.
     * @Author: modmuss

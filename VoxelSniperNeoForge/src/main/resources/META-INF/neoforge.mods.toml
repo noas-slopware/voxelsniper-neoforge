@@ -1,0 +1,32 @@
+modLoader="javafml"
+loaderVersion="[4,)"
+license="LGPL-2.1"
+issueTrackerURL="https://github.com/noas-slopware/voxelsniper-neoforge/issues"
+
+[[mods]]
+modId="voxelsniper"
+version="${mod_version}"
+displayName="VoxelSniper Reimagined"
+authors="KevinDaGame and the VoxelSniper Reimagined contributors; NeoForge 1.21.1 port by Noa Himesaka"
+displayURL="https://github.com/noas-slopware/voxelsniper-neoforge"
+description='''
+In-game world editing with brushes: point an arrow or gunpowder at a block and sculpt from a distance.
+Server-side only. Clients do not need it.
+'''
+
+[[mixins]]
+config="voxelsniper.mixins.json"
+
+[[dependencies.voxelsniper]]
+modId="neoforge"
+type="required"
+versionRange="${neo_version_range}"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.voxelsniper]]
+modId="minecraft"
+type="required"
+versionRange="${minecraft_version_range}"
+ordering="NONE"
+side="BOTH"

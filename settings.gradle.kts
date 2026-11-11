@@ -3,7 +3,6 @@ rootProject.name = "VoxelSniper"
 pluginManagement {
     repositories {
         gradlePluginPortal()
-        maven("https://maven.minecraftforge.net/")
         maven {
             name = "Fabric"
             url = uri("https://maven.fabricmc.net/")
@@ -16,5 +15,5 @@ plugins {
 
 include("VoxelSniperCore")
 include("VoxelSniperSpigot")
-include("VoxelSniperForge")
+include("VoxelSniperNeoForge")
 //include("VoxelSniperFabric")
