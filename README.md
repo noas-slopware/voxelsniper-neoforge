@@ -1,89 +1,57 @@
-VoxelSniper Reimagined
-============
-The premier long-distance brush editor
-for [Bukkit](https://bukkit.org/), [Spigot](https://www.spigotmc.org/), [Paper](https://papermc.io/),
-most Bukkit-based server distributions, [Forge](https://files.minecraftforge.net/net/minecraftforge/forge/)
-and [Fabric](https://fabricmc.net/).
+# VoxelSniper Reimagined for NeoForge 1.21.1
 
-**Please note: Our Fabric version is in beta**
+A port of [VoxelSniper Reimagined](https://github.com/KevinDaGame/VoxelSniper-Reimagined) 8.14.0 by KevinDaGame
+and contributors to NeoForge 1.21.1. It's the long-distance brush editor: hold an arrow or gunpowder, point at
+something far away, click, and the brush paints, sculpts, grows trees or regenerates chunks there.
 
-Discord
--------
-For the latest updates, and quick responses to questions, join
-our [discord server](https://discord.com/invite/YDjykYsAFF)!
+It runs on the server only. Players join with a vanilla or modded client and don't need it installed. Built and
+tested against NeoForge 21.1.262; it should work on any 21.1.x.
 
-Minecraft Version
-------------------
-VoxelSniper is being built against the Spigot 1.20 API, the latest Forge version and the latest fabric version.
+AI-assisted port (Claude). Tested on a bare NeoForge server and on the New YuruMC Modded pack, not much beyond that.
 
-What version do I pick?
+## Download
 
-### Spigot/Paper
+Grab the jar from [Releases](https://github.com/noas-slopware/voxelsniper-neoforge/releases) and put it in the
+server's `mods` folder. Config, language file and permissions end up in `config/voxelsniper/`.
 
-| Minecraft version | VoxelSniper version                                                                | Java version   |
-|-------------------|------------------------------------------------------------------------------------|----------------|
-| *1.16*\*          | [8.3.1](https://github.com/KevinDaGame/VoxelSniper-Reimagined/releases/tag/v8.3.1) | Java 16        |
-| *1.17*\*          | [8.3.1](https://github.com/KevinDaGame/VoxelSniper-Reimagined/releases/tag/v8.3.1) | Java 16        |
-| 1.18              | [Latest](https://github.com/KevinDaGame/VoxelSniper-Reimagined/releases/latest)    | Java 17-latest |
-| 1.19              | [Latest](https://github.com/KevinDaGame/VoxelSniper-Reimagined/releases/latest)    | Java 17-latest |
-| 1.20              | [Latest](https://github.com/KevinDaGame/VoxelSniper-Reimagined/releases/latest)    | Java 17-latest |
+## Using it
 
-\* Please note that we will not provide support when using Minecraft 1.16 or 1.17
+Same commands as upstream: `/b <brush>` picks a brush, `/b <size>` sets the size, `/v <block>` the material,
+`/vr` the replace material, `/u` undoes, `/d` resets. With the arrow, right click paints and sneak + left click
+picks the material of the block you're looking at (gunpowder does the same for the replace material). The brush
+list and the rest are in the [upstream wiki](https://github.com/KevinDaGame/VoxelSniper-Reimagined/wiki).
 
-### Forge
+Permissions go through NeoForge's permission API, so a permission mod (LuckPerms and friends) can hand out the
+`voxelsniper.*` nodes. Without one, everything is for operators only.
 
-| Minecraft version | VoxelSniper version                                                                  |
-|-------------------|--------------------------------------------------------------------------------------|
-| 1.16, 1.17, 1.18  | Not available                                                                        |
-| *1.19.4*\*        | [8.9.0](https://github.com/KevinDaGame/VoxelSniper-Reimagined/releases/tag/v8.9.0)   |
-| 1.20.0            | [8.12.0](https://github.com/KevinDaGame/VoxelSniper-Reimagined/releases/tag/v8.12.0) |
-| 1.20.1            | [8.12.3](https://github.com/KevinDaGame/VoxelSniper-Reimagined/releases/tag/v8.12.3) |
-| 1.20.2            | [Latest](https://github.com/KevinDaGame/VoxelSniper-Reimagined/releases/latest)      |
+## What changed from upstream
 
-\* Please note that the version for 1.19.4 has known issues which will not be fixed
+Upstream's NeoForge 1.21 branch (`feature/1.21`) was an unfinished refactor that didn't run. This repo finishes it:
 
-### Fabric
+- Builds with ModDevGradle. Core and its libraries are shaded and relocated into one jar; Gson, Guava and slf4j
+  come from Minecraft.
+- Mixins are registered, and chat and sign text conversion work again (it threw `NotImplementedException`).
+- Clicks only use events that fire on the server. NeoForge's `LeftClickEmpty` and `RightClickEmpty` fire only on
+  the client, so left clicks in the air come from a hook on the arm swing packet, like CraftBukkit does it.
+- Worlds are looked up by dimension. They were keyed by `ServerLevel.toString()`, which is the same for every
+  dimension, so sniping in the Nether edited the Overworld.
+- Players keep their brush settings across respawns and leaving the End (those create a new `ServerPlayer`).
+- Painting variants come from the 1.21 data-driven registry.
+- The regenerate chunk brush works again. 1.21 removed `ResetChunksCommand`, which the old port copied, so it now
+  runs the generation steps itself on the 1.21 chunk step API.
+- Brush arguments survive `/reload`, cancelled left clicks don't leave ghost blocks on creative clients, and
+  `/goto` style teleports reach the client.
 
-** Fabric is in alpha. There will be bugs!**
+## Building
 
-| Minecraft version | VoxelSniper version                                                                  |
-|-------------------|--------------------------------------------------------------------------------------|
-| *1.20.2*\*        | [8.12.5](https://github.com/KevinDaGame/VoxelSniper-Reimagined/releases/tag/v8.12.5) |
+Needs JDK 21.
 
-\* Please note that this is an alpha version. It will have bugs and issues.
+```sh
+./gradlew :VoxelSniperNeoForge:shadowJar
+```
 
-Compilation
------------
-Pre-compiled JARs are available in [Releases](https://github.com/KevinDaGame/VoxelSniper/releases).
-Alternatively, you can compile the project yourself using Gradle.
-We strongly recommend that you use Intellij to compile the project.
+The jar lands in `output/`. The Spigot module from upstream is still here and untouched.
 
-Other methods of compiling are at your own risk.
+## License
 
-Issue Tracker Notes
--------------------
-How do I create a ticket the right way?
-
-- Seperate your reports. You think there is something wrong, but also want this new brush? Make life easier for us and
-  create two tickets. We'd appreciate it big time.
-- Don't tell us your story of life. We want facts and information. The more information about `the Problem` you give us,
-  the easier it is for us to figure out what's wrong.
-- Check the closed tickets first. Maybe someone created a similiar ticket already. If you think it's unresolved, then
-  give us more information on there instead.
-- Use the correct teplates. Bug reports and feature requests have their own respective templates. If your issue does not
-  fit within those, then use the other template
-
-Keep in mind that those are guidelines.
-We may still look into stuff that does not follow these guidlines, but it will take more effort on our end and will
-reduce the likelyhood of us handling it.
-
-Pull Requests
--------------
-We accept pull requests and enhancements from third parties.
-
-Here are some guidelines for pull requests:
-
-- Keep the number of commits to a minimum. We want to look over the commit and easily see what you've done.
-- Give us a good description to what you've done.
-- Try to submit one change in one pull request and try to link it to the issue in the tracker if possible.
-- Code should be formatted using the intellij formatter to insure a consistent style throughout the project
+LGPL-2.1, same as upstream. See [LICENSE](LICENSE).
