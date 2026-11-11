@@ -10,6 +10,7 @@ import com.github.kevindagame.voxelsniperforge.material.ItemMaterial;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -73,7 +74,12 @@ public class ForgeVoxelSniperListener {
     @SubscribeEvent(priority = EventPriority.HIGH)
     public void onLeftClickBlock(final PlayerInteractEvent.LeftClickBlock event) {
         if (event.getAction() != PlayerInteractEvent.LeftClickBlock.Action.START) return;
-        handle(event, Sniper.Action.LEFT_CLICK_BLOCK, event.getPos(), event.getFace());
+        if (handle(event, Sniper.Action.LEFT_CLICK_BLOCK, event.getPos(), event.getFace())
+                && event.getEntity() instanceof ServerPlayer player) {
+            // NeoForge returns without a reply when the break is cancelled. Send the real block back, like vanilla
+            // does when it refuses a break, so a creative client that already removed it shows it again.
+            player.connection.send(new ClientboundBlockUpdatePacket(event.getLevel(), event.getPos()));
+        }
     }
 
     /**
