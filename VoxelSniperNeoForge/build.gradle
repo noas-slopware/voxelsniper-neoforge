@@ -10,7 +10,7 @@ def mcVersion = prop('minecraft_version')
 
 description = 'VoxelSniperNeoForge'
 group = 'com.github.kevindagame'
-version = findProperty('voxelsniper.version') ?: 'unspecified'
+version = "${findProperty('voxelsniper.version') ?: 'unspecified'}-r${prop('port_revision')}"
 
 base {
     archivesName = 'voxelsniper'

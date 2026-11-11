@@ -17,6 +17,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.ICancellableEvent;
@@ -83,8 +84,9 @@ public class ForgeVoxelSniperListener {
     }
 
     /**
-     * Called by the swing mixin. Only a swing that hits no block in reach counts as a left click in the air; a swing
-     * at a block in reach is already a {@link PlayerInteractEvent.LeftClickBlock}.
+     * Called by the swing mixin. A swing that hits no block in reach is a left click in the air. A swing at a block in
+     * reach is normally a {@link PlayerInteractEvent.LeftClickBlock} already, except where the player may not break
+     * that block (adventure mode), in which case the client sends only the swing.
      */
     public void onSwing(final ServerPlayer player) {
         if (player.isSpectator()) return;
@@ -95,8 +97,14 @@ public class ForgeVoxelSniperListener {
         var eye = player.getEyePosition();
         var end = eye.add(player.getViewVector(1.0F).scale(reach));
         var hit = player.level().clip(new ClipContext(eye, end, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, player));
-        if (hit.getType() != HitResult.Type.MISS) return;
-        snipe(player, player.getMainHandItem(), Sniper.Action.LEFT_CLICK_AIR, null, null);
+        if (hit.getType() == HitResult.Type.MISS) {
+            snipe(player, player.getMainHandItem(), Sniper.Action.LEFT_CLICK_AIR, null, null);
+        } else if (hit instanceof BlockHitResult blockHit
+                && player.blockActionRestricted(player.level(), blockHit.getBlockPos(), player.gameMode.getGameModeForPlayer())) {
+            // Adventure mode: the client doesn't send START_DESTROY_BLOCK for a block it may not break, so the swing is
+            // all that arrives for a left click on a block in reach.
+            snipe(player, player.getMainHandItem(), Sniper.Action.LEFT_CLICK_BLOCK, blockHit.getBlockPos(), blockHit.getDirection());
+        }
     }
 
     private boolean handle(PlayerInteractEvent event, Sniper.Action action, @Nullable BlockPos pos, @Nullable Direction face) {

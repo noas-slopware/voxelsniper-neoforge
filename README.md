@@ -12,7 +12,7 @@ AI-assisted port (Claude). Tested on a bare NeoForge server and on the New YuruM
 ## Download
 
 Grab the jar from [Releases](https://github.com/noas-slopware/voxelsniper-neoforge/releases) and put it in the
-server's `mods` folder. Config, language file and permissions end up in `config/voxelsniper/`.
+server's `mods` folder. `config.yml`, `lang.yml` and a `schematics` folder end up in `config/voxelsniper/`.
 
 ## Using it
 
@@ -39,8 +39,10 @@ Upstream's NeoForge 1.21 branch (`feature/1.21`) was an unfinished refactor that
 - Painting variants come from the 1.21 data-driven registry.
 - The regenerate chunk brush works again. 1.21 removed `ResetChunksCommand`, which the old port copied, so it now
   runs the generation steps itself on the 1.21 chunk step API.
+- Sneak + left click works in adventure mode too: the client sends only an arm swing there, so the swing hook
+  handles it.
 - Brush arguments survive `/reload`, cancelled left clicks don't leave ghost blocks on creative clients, and
-  `/goto` style teleports reach the client.
+  `/goto` teleports reach the client.
 
 ## Building
 
